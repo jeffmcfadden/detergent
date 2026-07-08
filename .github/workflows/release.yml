@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# No default permissions for anything in this workflow
+permissions: {}
+
+jobs:
+  release:
+    # Never run on forks
+    if: github.repository == 'jeffmcfadden/detergent'
+    runs-on: ubuntu-latest
+    # Deployment environment; protection rules configured in repo settings
+    environment: rubygems
+    permissions:
+      contents: read
+      id-token: write # Required for OIDC trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run tests
+        run: bundle exec rake test
+
+      - name: Check whether this version is already on RubyGems
+        id: version
+        run: |
+          version=$(ruby -e 'require "./lib/detergent/version"; puts Detergent::VERSION')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          status=$(curl -s -o /dev/null -w '%{http_code}' "https://rubygems.org/api/v2/rubygems/detergent/versions/${version}.json")
+          if [ "$status" = "200" ]; then
+            echo "detergent ${version} is already published; skipping release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "detergent ${version} is not yet published; releasing."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure RubyGems credentials (OIDC trusted publishing)
+        if: steps.version.outputs.publish == 'true'
+        uses: rubygems/configure-rubygems-credentials@v1
+
+      - name: Build and push gem
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          gem build detergent.gemspec
+          gem push "detergent-${{ steps.version.outputs.version }}.gem"
