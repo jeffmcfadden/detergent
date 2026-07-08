@@ -33,7 +33,7 @@ module Detergent
     end
 
     def title(html)
-      doc = Nokogiri::HTML(html)
+      doc = Nokogiri::HTML5(html)
 
       title_node = doc.at('title')
       title = title_node ? title_node.text.strip : ""
@@ -43,7 +43,7 @@ module Detergent
 
 
     def cleaned_html(html)
-      doc = Nokogiri::HTML(html)
+      doc = Nokogiri::HTML5(html)
 
       title_node = doc.at('title')
       title = title_node ? title_node.text.strip : ""
@@ -66,7 +66,10 @@ module Detergent
           content_root = find_content_root(highest_scoring)
 
           # Apply second-pass cleaning to the content
-          clean_node(content_root) if content_root
+          if content_root
+            clean_node(content_root)
+            strip_junk_attributes(content_root)
+          end
 
           content = content_root
         end
@@ -177,8 +180,20 @@ module Detergent
           elsif removable?(child)
             child.remove
           else
-            child.remove_attribute("class") # Cleanup
+            strip_junk_attributes(child)
           end
+        end
+      end
+    end
+
+    # Strip presentation and tracking attributes from a kept element.
+    # Must run only after removability has been decided, because the
+    # matchers read class and style. Keeps id so in-page anchors work.
+    def strip_junk_attributes(node)
+      node.attribute_nodes.each do |attr|
+        name = attr.name.downcase
+        if %w[class style].include?(name) || name.start_with?("on", "data-")
+          node.remove_attribute(attr.name)
         end
       end
     end

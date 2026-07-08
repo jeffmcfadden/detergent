@@ -52,7 +52,14 @@ class TestFixtureExtraction < Minitest::Test
     refute_includes @cleaned, "What about cold brew?"
   end
 
-  def test_strips_class_attributes_from_content
-    refute_includes @cleaned, 'class='
+  def test_strips_junk_attributes_from_content
+    refute_includes @cleaned, "class="
+    refute_includes @cleaned, "style="
+    refute_includes @cleaned, "onclick="
+    refute_includes @cleaned, "data-track="
+  end
+
+  def test_keeps_id_attributes_for_anchors
+    assert_includes @cleaned, 'id="conclusion"'
   end
 end
