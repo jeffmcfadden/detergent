@@ -151,10 +151,12 @@ module Detergent
 
     # Recursively process an element's children and remove any that are "empty"
     def clean_node(node, within_article: false)
+      within_article ||= node.name.downcase == "article"
+
       # Iterate over a copy of the children to avoid modification issues
       node.children.to_a.each do |child|
         if child.element?
-          clean_node(child, within_article: within_article || node.name.downcase == "article" )  # process children first
+          clean_node(child, within_article: within_article)  # process children first
           # Remove the child if it qualifies as "empty"
 
           if child.name.downcase == "aside" && !within_article
