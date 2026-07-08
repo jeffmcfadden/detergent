@@ -46,6 +46,7 @@ end
 require_relative "detergent/version"
 require_relative "detergent/node_scorer"
 require_relative "detergent/content_locator"
+require_relative "detergent/link_list_extractor"
 require_relative "detergent/markdown_renderer"
 require_relative "detergent/text_renderer"
 require_relative "detergent/matchers/obvious_junk_matcher"

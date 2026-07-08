@@ -5,8 +5,9 @@ module Detergent
   # scrubs it, and renders the result back out as a standalone document.
   class Cleaner
     # observer (optional) receives instrumentation callbacks during
-    # extraction: node_removed(node, pass:) and content_pruned(body, scorer).
-    # Used by Inspector to build debug reports.
+    # extraction: node_removed(node, pass:), content_pruned(body, scorer),
+    # and extraction_strategy(strategy). Used by Inspector to build debug
+    # reports.
     def initialize(observer: nil)
       @observer = observer
       @obvious_junk_matcher = Matchers::ObviousJunkMatcher.new
@@ -57,6 +58,16 @@ module Detergent
         scorer = NodeScorer.new
         @observer&.content_pruned(body, scorer)
         content = ContentLocator.new(scorer).locate(body)
+        strategy = content ? :article : nil
+
+        # No article-shaped content: the page may be a link index (front
+        # page, aggregator), whose content is its list of links.
+        if content.nil?
+          content = LinkListExtractor.new.extract(body)
+          strategy = :link_list if content
+        end
+
+        @observer&.extraction_strategy(strategy)
 
         # Apply second-pass cleaning to the content
         if content

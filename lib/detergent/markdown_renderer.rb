@@ -9,7 +9,11 @@ module Detergent
   # image, ...) so TextRenderer can subclass this and strip the syntax.
   class MarkdownRenderer
     def render(node)
-      render_blocks(node).gsub(/\n{3,}/, "\n\n").strip
+      # Route through render_block so a root that is itself a block
+      # element (a ul, a blockquote) gets its block treatment; generic
+      # containers and fragments fall through to render_blocks.
+      output = node.element? ? render_block(node) : render_blocks(node)
+      output.gsub(/\n{3,}/, "\n\n").strip
     end
 
     private

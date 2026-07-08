@@ -75,6 +75,11 @@ report object also exposes `located?`, `best_score`, `top_nodes`, and
 3. The highest-scoring node is located and walked up to an appropriate semantic container.
 4. A second pass cleans that content of empty and suspect elements.
 
+Pages with no article content but a substantial set of title-like links —
+index pages and link aggregators like the Hacker News front page — fall
+back to link-list extraction: the result is a clean list of the page's
+links instead of an article.
+
 ## License
 
 [WTFPL](LICENSE)

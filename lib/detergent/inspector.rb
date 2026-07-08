@@ -19,7 +19,7 @@ module Detergent
     ScoredNode = Struct.new(:score, :descriptor, :preview, :breakdown)
 
     class Report
-      attr_accessor :title, :best_score, :content_root, :content_root_size, :top_nodes
+      attr_accessor :title, :best_score, :content_root, :content_root_size, :top_nodes, :strategy
       attr_reader :removals
 
       def initialize
@@ -63,8 +63,11 @@ module Detergent
       def verdict
         threshold = ContentLocator::MINIMUM_CONTENT_SCORE
 
-        if located?
-          "Verdict: content located (best score #{best_score}, threshold #{threshold})"
+        case strategy
+        when :article
+          "Verdict: article content located (best score #{best_score}, threshold #{threshold})"
+        when :link_list
+          "Verdict: no article content (best score #{best_score} < threshold #{threshold}); extracted link list instead"
         else
           "Verdict: NO MAIN CONTENT (best score #{best_score} < threshold #{threshold})"
         end
@@ -115,6 +118,10 @@ module Detergent
       end
 
       @report.best_score = scored.first&.first || 0
+    end
+
+    def extraction_strategy(strategy)
+      @report.strategy = strategy
     end
 
     private

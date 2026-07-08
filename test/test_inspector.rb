@@ -43,18 +43,35 @@ class TestInspector < Minitest::Test
   def test_report_renders_as_text
     output = Detergent::Inspector.new.analyze(COFFEE).to_s
 
-    assert_includes output, "Verdict: content located"
+    assert_includes output, "Verdict: article content located"
     assert_includes output, "Top scoring nodes"
     assert_includes output, "Content root: main"
     assert_includes output, "First pass"
     assert_includes output, "Second pass"
   end
 
-  def test_no_content_report
+  def test_article_report_shows_article_strategy
+    report = Detergent::Inspector.new.analyze(COFFEE)
+
+    assert_equal :article, report.strategy
+    assert_includes report.to_s, "article content located"
+  end
+
+  def test_link_list_fallback_report
     report = Detergent::Inspector.new.analyze(HN)
 
-    refute report.located?
+    assert_equal :link_list, report.strategy
     assert_operator report.best_score, :<, Detergent::ContentLocator::MINIMUM_CONTENT_SCORE
+    assert_includes report.to_s, "extracted link list instead"
+    assert_includes report.to_s, "Content root: ul"
+  end
+
+  def test_no_content_report
+    html = "<html><head><title>Nothing</title></head><body><p>Hi.</p></body></html>"
+    report = Detergent::Inspector.new.analyze(html)
+
+    refute report.located?
+    assert_nil report.strategy
     assert_includes report.to_s, "NO MAIN CONTENT"
     assert_includes report.to_s, "Content root: (none)"
   end
@@ -68,6 +85,6 @@ class TestInspector < Minitest::Test
     assert_includes title, "How to Brew Better Coffee at Home"
 
     debug = IO.popen([RbConfig.ruby, "-I", lib, exe, "--format", "debug", fixture], &:read)
-    assert_includes debug, "Verdict: content located"
+    assert_includes debug, "Verdict: article content located"
   end
 end
