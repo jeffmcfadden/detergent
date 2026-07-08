@@ -1,3 +1,6 @@
 .DS_Store
 .env
 .claude
+mise.toml
+Gemfile.lock
+*.gem
