@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "test_helper"
 
 # End-to-end extraction tests against a realistic saved page, so the

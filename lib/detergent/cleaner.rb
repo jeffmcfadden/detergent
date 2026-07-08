@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Detergent
   class Cleaner
 
@@ -54,21 +56,20 @@ module Detergent
 
       if body
         # First remove the most egregious crap, like obvious ads, etc.
-        prune(node: body, matcher: Matchers::ObviousJunkMatcher.new)
+        prune(node: body, matcher: @obvious_junk_matcher)
 
         # Find the highest-scoring node in the cleaned tree
         highest_scoring = find_highest_scoring_node(body)
-        return nil unless highest_scoring
 
-        # Find the appropriate root container for that node
-        content_root = find_content_root(highest_scoring)
+        if highest_scoring
+          # Find the appropriate root container for that node
+          content_root = find_content_root(highest_scoring)
 
-        # Apply second-pass cleaning to the content
-        if content_root
-          clean_node(content_root)
+          # Apply second-pass cleaning to the content
+          clean_node(content_root) if content_root
+
+          content = content_root
         end
-
-        content = content_root
       end
 
       [title, content]
@@ -78,11 +79,13 @@ module Detergent
 
     def prune(node:, matcher:)
       node.children.to_a.each do |child|
-        if child.element?
-          # Recurse first
-          prune(node: child, matcher: matcher)
+        next unless child.element?
 
-          child.remove if matcher.match?(child)
+        # Match first so we never bother walking a subtree we're removing
+        if matcher.match?(child)
+          child.remove
+        else
+          prune(node: child, matcher: matcher)
         end
       end
 
