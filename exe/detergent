@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "detergent"
+require "optparse"
+
+format = "markdown"
+
+parser = OptionParser.new do |opts|
+  opts.banner = <<~BANNER
+    Usage: detergent [options] <file or URL>
+
+    Extracts the main content from a web page.
+  BANNER
+
+  opts.on("-f", "--format FORMAT", %w[html markdown text title debug],
+          "Output format: html, markdown, text, title, or debug (default: markdown)") do |value|
+    format = value
+  end
+
+  opts.on("-v", "--version", "Print the version") do
+    puts Detergent::VERSION
+    exit
+  end
+end
+parser.parse!
+
+source = ARGV.shift
+abort parser.to_s if source.nil?
+
+def fetch(url, limit = 5)
+  abort "Error: too many redirects" if limit.zero?
+
+  response = Net::HTTP.get_response(URI(url))
+  case response
+  when Net::HTTPRedirection
+    fetch(URI.join(url, response["location"]).to_s, limit - 1)
+  when Net::HTTPSuccess
+    response.body
+  else
+    abort "Error: HTTP #{response.code} fetching #{url}"
+  end
+end
+
+html = if source.match?(%r{\Ahttps?://})
+  require "net/http"
+  fetch(source)
+else
+  File.read(source)
+end
+
+case format
+when "html" then puts Detergent.clean(html)
+when "markdown" then puts Detergent.markdown(html)
+when "text" then puts Detergent.text(html)
+when "title" then puts Detergent::Cleaner.new.title(html)
+when "debug" then puts Detergent::Inspector.new.analyze(html)
+end

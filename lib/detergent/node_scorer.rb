@@ -35,47 +35,63 @@ module Detergent
       return cached unless cached.nil?
       return 0 unless node.element?
 
-      @scores[node] = compute_score(node)
+      total = components_for(node).sum { |_label, points| points }
+      @scores[node] = [total, 0].max # Don't return negative scores
+    end
+
+    # Returns the score as [label, points] pairs explaining where every
+    # point came from. Debugging aid used by Inspector.
+    def explain(node)
+      return [] unless node.element?
+
+      components_for(node)
     end
 
     private
 
-    def compute_score(node)
+    def components_for(node)
       stats = stats_for(node)
-      score = 0
       tag = node.name.downcase
+      parts = []
 
       # Positive indicators for main content
-      score += ARTICLE_TAG_BONUS if tag == 'article'
-      score += MAIN_TAG_BONUS if tag == 'main'
-      score += MAIN_ROLE_BONUS if node['role'].to_s.downcase == 'main'
+      parts << ["<article> tag", ARTICLE_TAG_BONUS] if tag == 'article'
+      parts << ["<main> tag", MAIN_TAG_BONUS] if tag == 'main'
+      parts << ["role=main", MAIN_ROLE_BONUS] if node['role'].to_s.downcase == 'main'
 
       # Paragraphs and raw text are strong indicators of article content
-      score += stats[:paragraphs] * POINTS_PER_PARAGRAPH
-      score += stats[:text_length] / CHARS_PER_TEXT_POINT
-      score += stats[:long_paragraphs] * LONG_PARAGRAPH_BONUS
+      if stats[:paragraphs] > 0
+        parts << ["#{stats[:paragraphs]} paragraphs", stats[:paragraphs] * POINTS_PER_PARAGRAPH]
+      end
+      if (text_points = stats[:text_length] / CHARS_PER_TEXT_POINT) > 0
+        parts << ["#{stats[:text_length]} chars of text", text_points]
+      end
+      if stats[:long_paragraphs] > 0
+        parts << ["#{stats[:long_paragraphs]} long paragraphs", stats[:long_paragraphs] * LONG_PARAGRAPH_BONUS]
+      end
 
       # High link density suggests navigation
-      if stats[:text_length] > 0
+      if stats[:text_length] > 0 && stats[:links] > 0
         link_density = stats[:links].to_f / (stats[:text_length] / 100.0)
-        score -= (link_density * LINK_DENSITY_PENALTY).to_i
+        parts << ["link density #{link_density.round(2)} (#{stats[:links]} links)",
+                  -(link_density * LINK_DENSITY_PENALTY).to_i]
       end
 
       # Media, blockquotes, and lists all suggest article content
-      score += stats[:media] * POINTS_PER_MEDIA
-      score += stats[:blockquotes] * POINTS_PER_BLOCKQUOTE
-      score += stats[:lists] * POINTS_PER_LIST
+      parts << ["#{stats[:media]} media elements", stats[:media] * POINTS_PER_MEDIA] if stats[:media] > 0
+      parts << ["#{stats[:blockquotes]} blockquotes", stats[:blockquotes] * POINTS_PER_BLOCKQUOTE] if stats[:blockquotes] > 0
+      parts << ["#{stats[:lists]} lists", stats[:lists] * POINTS_PER_LIST] if stats[:lists] > 0
 
       # Penalty for suspicious classes/ids
       classes = node['class'].to_s.downcase
       ids = node['id'].to_s.downcase
 
-      score -= SIDEBAR_PENALTY if classes.include?('sidebar') || ids.include?('sidebar')
-      score -= COMMENT_PENALTY if classes.include?('comment') || ids.include?('comment')
-      score -= AD_PENALTY if classes.include?('ad') || ids.include?('ad')
-      score -= SOCIAL_PENALTY if classes.include?('social') || ids.include?('social')
+      parts << ["suspect 'sidebar' class/id", -SIDEBAR_PENALTY] if classes.include?('sidebar') || ids.include?('sidebar')
+      parts << ["suspect 'comment' class/id", -COMMENT_PENALTY] if classes.include?('comment') || ids.include?('comment')
+      parts << ["suspect 'ad' class/id", -AD_PENALTY] if classes.include?('ad') || ids.include?('ad')
+      parts << ["suspect 'social' class/id", -SOCIAL_PENALTY] if classes.include?('social') || ids.include?('social')
 
-      [score, 0].max # Don't return negative scores
+      parts
     end
 
     # Statistics about a node's descendants (not the node itself),

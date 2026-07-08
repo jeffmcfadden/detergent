@@ -4,7 +4,11 @@ module Detergent
   # Orchestrates cleaning: prunes obvious junk, locates the main content,
   # scrubs it, and renders the result back out as a standalone document.
   class Cleaner
-    def initialize
+    # observer (optional) receives instrumentation callbacks during
+    # extraction: node_removed(node, pass:) and content_pruned(body, scorer).
+    # Used by Inspector to build debug reports.
+    def initialize(observer: nil)
+      @observer = observer
       @obvious_junk_matcher = Matchers::ObviousJunkMatcher.new
       @removable_node_matcher = Matchers::RemovableNodeMatcher.new
     end
@@ -50,7 +54,9 @@ module Detergent
 
         # Score caches are only valid for a single parse of a single
         # document, so the scorer and locator are built per extract.
-        content = ContentLocator.new(NodeScorer.new).locate(body)
+        scorer = NodeScorer.new
+        @observer&.content_pruned(body, scorer)
+        content = ContentLocator.new(scorer).locate(body)
 
         # Apply second-pass cleaning to the content
         if content
@@ -91,6 +97,7 @@ module Detergent
 
         # Match first so we never bother walking a subtree we're removing
         if matcher.match?(child)
+          @observer&.node_removed(child, pass: :first_pass)
           child.remove
         else
           prune(node: child, matcher: matcher)
@@ -111,8 +118,10 @@ module Detergent
           # Remove the child if it qualifies as "empty"
 
           if child.name.downcase == "aside" && !within_article
+            @observer&.node_removed(child, pass: :second_pass)
             child.remove
           elsif removable?(child)
+            @observer&.node_removed(child, pass: :second_pass)
             child.remove
           else
             strip_junk_attributes(child)

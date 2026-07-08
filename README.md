@@ -31,6 +31,43 @@ clean_html = cleaner.clean(dirty_html)
 title = cleaner.title(dirty_html)
 ```
 
+## Command line
+
+```
+detergent article.html                    # extracted content as Markdown
+detergent --format text https://example.com/post
+detergent --format html article.html     # cleaned standalone document
+detergent --format title article.html
+```
+
+## Debugging
+
+When extraction picks the wrong node (or nothing at all), the Inspector
+reports every decision: what each pass removed, the top-scoring nodes with
+point-by-point score breakdowns, and whether the best candidate cleared the
+minimum content score.
+
+```
+$ detergent --format debug page.html
+
+Detergent 2.3.0 debug report
+Title: "Hacker News"
+Verdict: NO MAIN CONTENT (best score 10 < threshold 25)
+
+First pass (obvious junk): removed 1 nodes (script x1)
+
+Top scoring nodes after first pass:
+     10  td
+           +10  1 media elements
+      0  tr#48825749.athing.submission          20.Tenda firmware (multiple versions) co...
+           -34  link density 3.45 (3 links)
+...
+```
+
+Or from Ruby: `puts Detergent::Inspector.new.analyze(html)` — the returned
+report object also exposes `located?`, `best_score`, `top_nodes`, and
+`removals` for programmatic use.
+
 ## How it works
 
 1. A first pass prunes obvious junk (scripts, styles, iframes, nav, headers, footers, hidden elements).

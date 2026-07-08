@@ -15,7 +15,9 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
 
-  spec.files = Dir["lib/**/*.rb", "LICENSE", "README.md"]
+  spec.files = Dir["lib/**/*.rb", "exe/*", "LICENSE", "README.md"]
+  spec.bindir = "exe"
+  spec.executables = ["detergent"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "nokogiri", "~> 1.15"
