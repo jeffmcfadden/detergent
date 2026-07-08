@@ -15,16 +15,16 @@ gem "detergent"
 ```ruby
 require "detergent"
 
-cleaner = Detergent::Cleaner.new
-
 # Get a cleaned, self-contained HTML document:
-clean_html = cleaner.clean(dirty_html)
-
-# Or just the title:
-title = cleaner.title(dirty_html)
+clean_html = Detergent.clean(dirty_html)
 
 # Or the title and the extracted content node (a Nokogiri node):
-title, content = cleaner.cleaned_html(dirty_html)
+title, content = Detergent.extract(dirty_html)
+
+# A Cleaner instance is reusable if you're processing many pages:
+cleaner = Detergent::Cleaner.new
+clean_html = cleaner.clean(dirty_html)
+title = cleaner.title(dirty_html)
 ```
 
 ## How it works

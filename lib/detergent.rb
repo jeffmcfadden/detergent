@@ -20,10 +20,22 @@ module Detergent
     style = node["style"].to_s.downcase
     style.include?("display:none") || style.include?("display: none")
   end
+
+  # Returns a cleaned, standalone HTML document.
+  def self.clean(html)
+    Cleaner.new.clean(html)
+  end
+
+  # Returns [title, content]: the page title and the cleaned Nokogiri
+  # node containing the main content (nil if none was found).
+  def self.extract(html)
+    Cleaner.new.extract(html)
+  end
 end
 
 require_relative "detergent/version"
 require_relative "detergent/node_scorer"
+require_relative "detergent/content_locator"
 require_relative "detergent/matchers/obvious_junk_matcher"
 require_relative "detergent/matchers/removable_node_matcher"
 require_relative "detergent/cleaner"

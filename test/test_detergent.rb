@@ -80,6 +80,21 @@ class TestDetergent < Minitest::Test
     assert_includes cleaned, "<title>Ben &amp; Jerry&#39;s &lt;3</title>"
   end
 
+  def test_extract_returns_title_and_content_node
+    title, content = @cleaner.extract(SAMPLE_HTML)
+
+    assert_equal "My Great Article", title
+    assert_kind_of Nokogiri::XML::Node, content
+    assert_includes content.text, "This is the main content of the article."
+  end
+
+  def test_module_level_convenience_methods
+    assert_includes Detergent.clean(SAMPLE_HTML), "This is the main content of the article."
+
+    title, _content = Detergent.extract(SAMPLE_HTML)
+    assert_equal "My Great Article", title
+  end
+
   def test_version
     assert_equal "1.0.0", Detergent::VERSION
   end
