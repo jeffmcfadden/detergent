@@ -96,6 +96,6 @@ class TestDetergent < Minitest::Test
   end
 
   def test_version
-    assert_equal "2.1.0", Detergent::VERSION
+    assert_equal "2.2.0", Detergent::VERSION
   end
 end

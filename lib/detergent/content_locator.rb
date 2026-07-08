@@ -11,13 +11,23 @@ module Detergent
     # promoted — not just score marginally higher from including the child.
     PARENT_PROMOTION_RATIO = 1.3
 
+    # If even the best-scoring node falls below this, the page has no main
+    # content to extract. Pages made entirely of links (index pages, link
+    # aggregators like the Hacker News front page) score at or near zero
+    # everywhere, and without a floor a degenerate winner gets elected —
+    # e.g. a logo cell that picked up a few points for containing an image.
+    MINIMUM_CONTENT_SCORE = 25
+
     def initialize(scorer)
       @scorer = scorer
     end
 
+    # Returns the main content root node, or nil if the page doesn't
+    # appear to have main content at all.
     def locate(body)
       highest_scoring = find_highest_scoring_node(body)
       return nil unless highest_scoring
+      return nil if score(highest_scoring) < MINIMUM_CONTENT_SCORE
 
       find_content_root(highest_scoring)
     end
