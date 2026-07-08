@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "cgi"
+require "cgi/escape"
 require "nokogiri"
 
 module Detergent
@@ -31,11 +31,23 @@ module Detergent
   def self.extract(html)
     Cleaner.new.extract(html)
   end
+
+  # Returns the extracted main content as Markdown.
+  def self.markdown(html)
+    Cleaner.new.markdown(html)
+  end
+
+  # Returns the extracted main content as plain text.
+  def self.text(html)
+    Cleaner.new.text(html)
+  end
 end
 
 require_relative "detergent/version"
 require_relative "detergent/node_scorer"
 require_relative "detergent/content_locator"
+require_relative "detergent/markdown_renderer"
+require_relative "detergent/text_renderer"
 require_relative "detergent/matchers/obvious_junk_matcher"
 require_relative "detergent/matchers/removable_node_matcher"
 require_relative "detergent/cleaner"

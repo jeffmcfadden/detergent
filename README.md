@@ -21,6 +21,10 @@ clean_html = Detergent.clean(dirty_html)
 # Or the title and the extracted content node (a Nokogiri node):
 title, content = Detergent.extract(dirty_html)
 
+# Or the extracted main content as Markdown or plain text:
+markdown = Detergent.markdown(dirty_html)
+text = Detergent.text(dirty_html)
+
 # A Cleaner instance is reusable if you're processing many pages:
 cleaner = Detergent::Cleaner.new
 clean_html = cleaner.clean(dirty_html)

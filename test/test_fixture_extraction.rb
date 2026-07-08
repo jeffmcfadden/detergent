@@ -62,4 +62,26 @@ class TestFixtureExtraction < Minitest::Test
   def test_keeps_id_attributes_for_anchors
     assert_includes @cleaned, 'id="conclusion"'
   end
+
+  def test_markdown_output
+    markdown = Detergent.markdown(FIXTURE)
+
+    assert_includes markdown, "# How to Brew Better Coffee at Home"
+    assert_includes markdown, "![A pourover brewer mid-extraction](/images/pourover.jpg)"
+    assert_includes markdown, "> Buy a burr grinder before you buy anything else."
+    assert_includes markdown, "- Grind with a burr grinder just before brewing."
+    refute_includes markdown, "<p>"
+    refute_includes markdown, "Great post!"
+  end
+
+  def test_text_output
+    text = Detergent.text(FIXTURE)
+
+    assert_includes text, "How to Brew Better Coffee at Home"
+    assert_includes text, "Freshness is the single biggest lever."
+    assert_includes text, "- Grind with a burr grinder just before brewing."
+    refute_includes text, "!["
+    refute_includes text, "# How"
+    refute_includes text, "Great post!"
+  end
 end

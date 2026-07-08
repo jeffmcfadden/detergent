@@ -62,6 +62,18 @@ module Detergent
       [title, content]
     end
 
+    # Returns the extracted main content as Markdown.
+    def markdown(html)
+      _, content = extract(html)
+      content ? MarkdownRenderer.new.render(content) : ""
+    end
+
+    # Returns the extracted main content as plain text.
+    def text(html)
+      _, content = extract(html)
+      content ? TextRenderer.new.render(content) : ""
+    end
+
     def title(html)
       extract_title(Nokogiri::HTML5(html))
     end
