@@ -7,18 +7,26 @@ module Detergent
     end
 
     def clean(html)
-      @html = html
-      title, body = cleaned_html(@html)
+      title, content = cleaned_html(html)
 
-      <<-HTML
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>#{title}</title>
-        </head>
-        #{body}
-      </html>
+      # The content root is usually an inner element (article, main, div),
+      # so wrap it in a body tag unless it already is one.
+      body = if content.nil? || content.name.downcase == "body"
+        content.to_s
+      else
+        "<body>#{content}</body>"
+      end
+
+      <<~HTML
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>#{CGI.escapeHTML(title.to_s)}</title>
+          </head>
+          #{body}
+        </html>
       HTML
     end
 

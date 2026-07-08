@@ -1,3 +1,4 @@
+require "cgi"
 require "nokogiri"
 
 require_relative "detergent/version"

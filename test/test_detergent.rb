@@ -63,6 +63,21 @@ class TestDetergent < Minitest::Test
     assert_operator article_score, :>, nav_score
   end
 
+  def test_clean_produces_valid_document_shell
+    cleaned = @cleaner.clean(SAMPLE_HTML)
+
+    assert_includes cleaned, "<!DOCTYPE html>"
+    assert_includes cleaned, "<body>"
+    assert_includes cleaned, "</body>"
+  end
+
+  def test_clean_escapes_title
+    html = SAMPLE_HTML.sub("<title>My Great Article</title>", "<title>Ben &amp; Jerry's &lt;3</title>")
+    cleaned = @cleaner.clean(html)
+
+    assert_includes cleaned, "<title>Ben &amp; Jerry&#39;s &lt;3</title>"
+  end
+
   def test_version
     assert_equal "1.0.0", Detergent::VERSION
   end
