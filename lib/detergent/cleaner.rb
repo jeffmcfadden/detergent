@@ -2,7 +2,6 @@ module Detergent
   class Cleaner
 
     def initialize
-      @node_scorer = NodeScorer.new
       @obvious_junk_matcher = Matchers::ObviousJunkMatcher.new
       @removable_node_matcher = Matchers::RemovableNodeMatcher.new
     end
@@ -41,6 +40,9 @@ module Detergent
 
       body = doc.at('body')
       content = nil
+
+      # Score caches are only valid for a single parse of a single document
+      @node_scorer = NodeScorer.new
 
       if body
         # First remove the most egregious crap, like obvious ads, etc.

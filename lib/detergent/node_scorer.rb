@@ -1,18 +1,16 @@
-# LOL yes, I'm doing this.
-class BasicObject
-  def readify_score=(new_score)
-    @readify_score = new_score
-  end
-
-  def readify_score
-    @readify_score
-  end
-end
-
 module Detergent
   class NodeScorer
+    def initialize
+      # Scores are cached per node so tree walks don't re-score subtrees.
+      # A scorer instance is scoped to a single parse of a document; discard
+      # it once the tree is mutated.
+      @scores = {}.compare_by_identity
+    end
+
     def score(node)
-      return node.readify_score unless node.readify_score.nil?
+      cached = @scores[node]
+      return cached unless cached.nil?
+
       return 0 unless node.element?
 
       score = 0
@@ -68,7 +66,7 @@ module Detergent
       score -= 70 if classes.include?('ad') || ids.include?('ad')
       score -= 70 if classes.include?('social') || ids.include?('social')
 
-      node.readify_score = [score, 0].max  # Don't return negative scores
+      @scores[node] = [score, 0].max  # Don't return negative scores
     end
   end
 end
