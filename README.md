@@ -31,6 +31,18 @@ clean_html = cleaner.clean(dirty_html)
 title = cleaner.title(dirty_html)
 ```
 
+## Extraction behavior
+
+Detergent prefers common article-body markers (including schema.org
+`articleBody`, `entry-content`, and `story-body`) when they contain substantive
+prose rather than mostly links. Otherwise it uses content scoring and the
+existing link-list fallback. Navigation, ads, sharing widgets, newsletters, and
+recommendations are pruned before scoring; ordinary asides inside an article
+remain available. Extraction is heuristic and does not bypass paywalls.
+
+Detergent is a content extractor, not an HTML security sanitizer. Sanitize its
+output before rendering untrusted HTML in an application.
+
 ## Command line
 
 ```

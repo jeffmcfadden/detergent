@@ -25,9 +25,9 @@ class TestInspector < Minitest::Test
     assert_includes first_pass, "footer"
     assert_includes first_pass, "script"
 
-    second_pass = report.removals[:second_pass]
-    assert_includes second_pass, "aside"   # the sidebar
-    assert_includes second_pass, "section" # the comments
+    # Sidebar and comment widgets are pruned before content scoring.
+    assert_includes first_pass, "aside"   # the sidebar
+    assert_includes first_pass, "section" # the comments
   end
 
   def test_top_nodes_include_score_breakdowns

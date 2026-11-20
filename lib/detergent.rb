@@ -18,7 +18,7 @@ module Detergent
 
   def self.display_none?(node)
     style = node["style"].to_s.downcase
-    style.include?("display:none") || style.include?("display: none")
+    /(?:display\s*:\s*none|visibility\s*:\s*hidden)/.match?(style)
   end
 
   # Returns a cleaned, standalone HTML document.

@@ -6,6 +6,7 @@ module Detergent
   # the best root container for the content.
   class ContentLocator
     SEMANTIC_CONTAINERS = %w[article main section].freeze
+    BODY_SELECTORS = '[itemprop~="articleBody"], .entry-content, .post-content, .article-content, .article-body, .story-body'.freeze
 
     # A parent must beat the best root found so far by this ratio to be
     # promoted — not just score marginally higher from including the child.
@@ -25,6 +26,17 @@ module Detergent
     # Returns the main content root node, or nil if the page doesn't
     # appear to have main content at all.
     def locate(body)
+      # Prefer a publisher's body marker only when it contains substantive prose
+      # and little linked text. Empty wrappers and link indexes still use scoring.
+      candidates = body.css(BODY_SELECTORS).select do |node|
+        text_length = node.text.strip.length
+        prose_length = node.css("p, pre, blockquote").sum { |child| child.text.strip.length }
+        linked_length = node.css("a").sum { |link| link.text.strip.length }
+        prose_length >= 80 && score(node).positive? &&
+          linked_length < text_length * 0.5
+      end
+      return candidates.max_by { |node| score(node) } unless candidates.empty?
+
       highest_scoring = find_highest_scoring_node(body)
       return nil unless highest_scoring
       return nil if score(highest_scoring) < MINIMUM_CONTENT_SCORE
